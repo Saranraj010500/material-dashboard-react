@@ -45,7 +45,15 @@ function Basic() {
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
-
+  const [formData, setformData] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirm_password: "",
+  });
+  const handleChange = (event) => {
+    const { name, value } = event.target;
+  };
   return (
     <BasicLayout image={bgImage}>
       <Card>
@@ -84,10 +92,10 @@ function Basic() {
         <MDBox pt={4} pb={3} px={3}>
           <MDBox component="form" role="form">
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" fullWidth />
+              <MDInput type="email" label="Email" value={formData.email} fullWidth />
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="password" label="Password" fullWidth />
+              <MDInput type="password" label="Password" value={formData.email} fullWidth />
             </MDBox>
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />

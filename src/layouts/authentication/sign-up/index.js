@@ -14,7 +14,7 @@ Coded by www.creative-tim.com
 */
 
 // react-router-dom components
-import { Link } from "react-router-dom";
+import { Link, json } from "react-router-dom";
 
 // @mui material components
 import Card from "@mui/material/Card";
@@ -31,8 +31,94 @@ import CoverLayout from "layouts/authentication/components/CoverLayout";
 
 // Images
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
+import { useState } from "react";
+import data from "../../../Data/db.json";
+import { CleaningServices } from "@mui/icons-material";
 
 function Cover() {
+  const [formData, setformData] = useState({
+    Name: "",
+    email: "",
+    password: "",
+  });
+  console.log(formData);
+  const [errors, setErrors] = useState({
+    Name: "",
+    email: "",
+    password: "",
+  });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    // console.log(e,'EEEEEE')
+    setformData({ ...formData, [name]: value });
+  };
+  console.log(data, "saj");
+  const submit = () => {
+    const newErrors = {};
+    let register = JSON.parse(localStorage.getItem("users"));
+    if (formData.email === "" || formData.email === null) {
+      newErrors.email = "Please enter email";
+    } else if (formData.email !== "") {
+      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Please enter a valid email";
+      } else {
+        newErrors.email = " ";
+        let reg = false;
+        if (!Array.isArray(data.users) || register === "") {
+          reg = true;
+        } else if (register !== "") {
+          let inVaild = data.users.filter((item) => {
+            console.log(item);
+            if (formData.email === item.Email) {
+              return true;
+            }
+          });
+          console.log(inVaild);
+          if (inVaild.length > 0) {
+            alert("Email Already Exist");
+            return;
+          } else {
+            reg = true;
+          }
+          data.users.push({ Email: formData.email, Password: formData.password });
+        }
+        if (reg == true) {
+          console.log("DFGHJK");
+          fetch("http://localhost:3000/users", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              Name: formData.Name,
+              Email: formData.email,
+              Password: formData.password,
+            }),
+          });
+          localStorage.setItem("users", JSON.stringify(data));
+        } else {
+          alert("Something went wrong to register your account!.");
+        }
+      }
+    }
+    if (formData.Name === "") {
+      newErrors.Name = "Please enter the name";
+    } else if (formData.Name.length < 3) {
+      newErrors.Name = "Please enter atleast 3 letters";
+    } else if (formData.Name.length >= 3) {
+      newErrors.Name = " ";
+      if (register === "") {
+      }
+    }
+    if (formData.password === "" || formData.password === null) {
+      newErrors.password = "Please enter password";
+    } else if (formData.password.length < 7) {
+      newErrors.password = "Please enter atleast 7 letters";
+    } else if (formData.password.length >= 7) {
+      newErrors.password = " ";
+    }
+    setErrors(newErrors);
+  };
   return (
     <CoverLayout image={bgImage}>
       <Card>
@@ -57,13 +143,46 @@ function Cover() {
         <MDBox pt={4} pb={3} px={3}>
           <MDBox component="form" role="form">
             <MDBox mb={2}>
-              <MDInput type="text" label="Name" variant="standard" fullWidth />
+              <MDInput
+                type="text"
+                label="Name"
+                name="Name"
+                variant="standard"
+                value={formData?.Name}
+                onChange={handleInputChange}
+                fullWidth
+              />
+              <MDBox color="red" fontSize="12px">
+                {errors.Name}
+              </MDBox>
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" variant="standard" fullWidth />
+              <MDInput
+                type="text"
+                label="Email"
+                name="email"
+                variant="standard"
+                value={formData.email}
+                onChange={handleInputChange}
+                fullWidth
+              />
+              <MDBox color="red" fontSize="12px">
+                {errors.email}
+              </MDBox>
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="password" label="Password" variant="standard" fullWidth />
+              <MDInput
+                type="password"
+                label="Password"
+                name="password"
+                variant="standard"
+                value={formData.password}
+                onChange={handleInputChange}
+                fullWidth
+              />
+              <MDBox color="red" fontSize="12px">
+                {errors.password}
+              </MDBox>
             </MDBox>
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Checkbox />
@@ -87,7 +206,7 @@ function Cover() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
+              <MDButton variant="gradient" color="info" fullWidth onClick={submit}>
                 sign in
               </MDButton>
             </MDBox>
@@ -102,7 +221,7 @@ function Cover() {
                   fontWeight="medium"
                   textGradient
                 >
-                  Sign In
+                  Sign Up
                 </MDTypography>
               </MDTypography>
             </MDBox>
