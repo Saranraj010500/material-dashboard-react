@@ -34,6 +34,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
+import { useNavigate } from "react-router-dom";
 
 // Authentication layout components
 import BasicLayout from "layouts/authentication/components/BasicLayout";
@@ -46,14 +47,79 @@ function Basic() {
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
   const [formData, setformData] = useState({
-    name: "",
     email: "",
     password: "",
-    confirm_password: "",
   });
-  const handleChange = (event) => {
-    const { name, value } = event.target;
+  let navigate = useNavigate();
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+  });
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    setformData({
+      ...formData,
+      [name]: value,
+    });
   };
+  const submit = () => {
+    const newErrors = {};
+    let login = JSON.parse(localStorage.getItem("Users_login"));
+    if (formData.email === "" || formData.email === null) {
+      newErrors.email = "Please enter email";
+    } else if (formData.email !== "") {
+      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Please enter a valid email";
+      }
+      let itemData = login.find((item) => {
+        if (formData.email == item.email) {
+          let login_user = JSON.parse(localStorage.getItem("Users_login"));
+          if (!Array.isArray(login)) {
+            login_user = [];
+            console.log(login_user);
+          }
+          if (login_user == "") {
+            login_user.push({ login_email: formData.email, login_password: formData.password });
+            navigate("/authentication/Dashboard");
+          }
+          let str = JSON.stringify(login_user);
+          localStorage.setItem("Users_login", str);
+          console.log(login_user);
+          navigate("/authentication/dashboard");
+          return true;
+        }
+      });
+
+      if (!itemData) {
+        alert("Invalid Useranme or Password");
+        navigate("/authentication/sign-in");
+      }
+      if (itemData) {
+        if (itemData.email == formData.email && itemData.password == formData.password) {
+          navigate("/authentication/Dashboard");
+        } else if (itemData.email == formData.email && itemData.password != formData.password) {
+          alert("Please Check your Username or Password");
+        } else {
+          alert("Invalid Useranme or Password");
+        }
+      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Please enter the Valid Email";
+      }
+    } else if (/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = " ";
+      document.getElementById("email-error-message").innerHTML = "";
+    }
+    if (formData.password === "" || formData.password === null) {
+      newErrors.password = "Please enter password";
+    } else if (formData.password.length < 7) {
+      newErrors.password = "Please enter atleast 7 letters";
+    } else if (formData.password.length >= 7) {
+      newErrors.password = " ";
+    }
+    setErrors(newErrors);
+  };
+
   return (
     <BasicLayout image={bgImage}>
       <Card>
@@ -92,10 +158,30 @@ function Basic() {
         <MDBox pt={4} pb={3} px={3}>
           <MDBox component="form" role="form">
             <MDBox mb={2}>
-              <MDInput type="email" label="Email" value={formData.email} fullWidth />
+              <MDInput
+                type="email"
+                label="Email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                fullWidth
+              />
+              <MDBox color="red" fontSize="12px">
+                {errors.email}
+              </MDBox>
             </MDBox>
             <MDBox mb={2}>
-              <MDInput type="password" label="Password" value={formData.email} fullWidth />
+              <MDInput
+                type="password"
+                label="Password"
+                name="password"
+                value={formData.password}
+                onChange={handleInputChange}
+                fullWidth
+              />
+              <MDBox color="red" fontSize="12px">
+                {errors.password}
+              </MDBox>
             </MDBox>
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />
@@ -110,8 +196,8 @@ function Basic() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth>
-                sign in
+              <MDButton variant="gradient" color="info" fullWidth onClick={submit}>
+                sign up
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
@@ -125,7 +211,7 @@ function Basic() {
                   fontWeight="medium"
                   textGradient
                 >
-                  Sign up
+                  Sign In
                 </MDTypography>
               </MDTypography>
             </MDBox>

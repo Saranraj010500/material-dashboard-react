@@ -28,12 +28,13 @@ import MDButton from "components/MDButton";
 
 // Authentication layout components
 import CoverLayout from "layouts/authentication/components/CoverLayout";
+// import { useHistory } from "react-router-dom";
+// import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // Images
 import bgImage from "assets/images/bg-sign-up-cover.jpeg";
 import { useState } from "react";
-import data from "../../../Data/db.json";
-import { CleaningServices } from "@mui/icons-material";
 
 function Cover() {
   const [formData, setformData] = useState({
@@ -42,6 +43,7 @@ function Cover() {
     password: "",
   });
   console.log(formData);
+  let navigate = useNavigate();
   const [errors, setErrors] = useState({
     Name: "",
     email: "",
@@ -49,10 +51,8 @@ function Cover() {
   });
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // console.log(e,'EEEEEE')
     setformData({ ...formData, [name]: value });
   };
-  console.log(data, "saj");
   const submit = () => {
     const newErrors = {};
     let register = JSON.parse(localStorage.getItem("users"));
@@ -63,11 +63,12 @@ function Cover() {
         newErrors.email = "Please enter a valid email";
       } else {
         newErrors.email = " ";
-        let reg = false;
-        if (!Array.isArray(data.users) || register === "") {
-          reg = true;
-        } else if (register !== "") {
-          let inVaild = data.users.filter((item) => {
+        if (!Array.isArray(register) || register === "") {
+          register = [];
+          console.log(register);
+        }
+        if (register !== "") {
+          let inVaild = register.filter((item) => {
             console.log(item);
             if (formData.email === item.Email) {
               return true;
@@ -78,28 +79,14 @@ function Cover() {
             alert("Email Already Exist");
             return;
           } else {
-            reg = true;
+            register.push({ Email: formData.email, Password: formData.password });
           }
-          data.users.push({ Email: formData.email, Password: formData.password });
-        }
-        if (reg == true) {
-          console.log("DFGHJK");
-          fetch("http://localhost:3000/users", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              Name: formData.Name,
-              Email: formData.email,
-              Password: formData.password,
-            }),
-          });
-          localStorage.setItem("users", JSON.stringify(data));
-        } else {
-          alert("Something went wrong to register your account!.");
         }
       }
+      let str = JSON.stringify(register);
+      localStorage.setItem("users", str);
+      navigate("/authentication/sign-in");
+      console.log(register);
     }
     if (formData.Name === "") {
       newErrors.Name = "Please enter the name";
@@ -207,7 +194,7 @@ function Cover() {
             </MDBox>
             <MDBox mt={4} mb={1}>
               <MDButton variant="gradient" color="info" fullWidth onClick={submit}>
-                sign in
+                sign up
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
@@ -221,7 +208,7 @@ function Cover() {
                   fontWeight="medium"
                   textGradient
                 >
-                  Sign Up
+                  Sign In
                 </MDTypography>
               </MDTypography>
             </MDBox>
