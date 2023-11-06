@@ -198,7 +198,7 @@ function Basic() {
             </MDBox>
             <MDBox mt={4} mb={1}>
               <MDButton variant="gradient" color="info" fullWidth onClick={submit}>
-                sign up
+                sign in
               </MDButton>
             </MDBox>
             <MDBox mt={3} mb={1} textAlign="center">
@@ -212,7 +212,7 @@ function Basic() {
                   fontWeight="medium"
                   textGradient
                 >
-                  Sign In
+                  Sign Up
                 </MDTypography>
               </MDTypography>
             </MDBox>

@@ -54,14 +54,24 @@ function Cover() {
     setformData({ ...formData, [name]: value });
   };
   const submit = () => {
+    let filter =
+      /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
     const newErrors = {};
     let register = JSON.parse(localStorage.getItem("users"));
     if (formData.email === "" || formData.email === null) {
       newErrors.email = "Please enter email";
-    } else if (formData.email !== "") {
-      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+    } else if (!filter.test(formData.email)) {
+      newErrors.email = "Please enter valid email";
+    } else if (formData.email != "" && formData.password != "") {
+      if (!filter.test(formData.email)) {
         newErrors.email = "Please enter a valid email";
-      } else {
+      }
+      if (
+        formData.password !== "" &&
+        formData.email !== "" &&
+        formData.Name !== "" &&
+        formData.password.length > 7
+      ) {
         newErrors.email = " ";
         if (!Array.isArray(register) || register === "") {
           register = [];
