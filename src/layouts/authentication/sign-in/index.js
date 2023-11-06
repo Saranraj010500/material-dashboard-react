@@ -57,7 +57,6 @@ function Basic() {
   });
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-
     setformData({
       ...formData,
       [name]: value,
@@ -65,57 +64,59 @@ function Basic() {
   };
   const submit = () => {
     const newErrors = {};
-    let login = JSON.parse(localStorage.getItem("Users_login"));
-    if (formData.email === "" || formData.email === null) {
-      newErrors.email = "Please enter email";
-    } else if (formData.email !== "") {
-      if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = "Please enter a valid email";
-      }
-      let itemData = login.find((item) => {
-        if (formData.email == item.email) {
-          let login_user = JSON.parse(localStorage.getItem("Users_login"));
-          if (!Array.isArray(login)) {
-            login_user = [];
-            console.log(login_user);
-          }
-          if (login_user == "") {
-            login_user.push({ login_email: formData.email, login_password: formData.password });
-            navigate("/authentication/Dashboard");
-          }
-          let str = JSON.stringify(login_user);
-          localStorage.setItem("Users_login", str);
-          console.log(login_user);
-          navigate("/authentication/dashboard");
-          return true;
-        }
-      });
-
-      if (!itemData) {
-        alert("Invalid Useranme or Password");
-        navigate("/authentication/sign-in");
-      }
-      if (itemData) {
-        if (itemData.email == formData.email && itemData.password == formData.password) {
-          navigate("/authentication/Dashboard");
-        } else if (itemData.email == formData.email && itemData.password != formData.password) {
-          alert("Please Check your Username or Password");
-        } else {
-          alert("Invalid Useranme or Password");
-        }
-      } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-        newErrors.email = "Please enter the Valid Email";
-      }
-    } else if (/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = " ";
-      document.getElementById("email-error-message").innerHTML = "";
-    }
-    if (formData.password === "" || formData.password === null) {
+    let filter =
+      /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+    if (formData.password == "" || formData.password == null) {
       newErrors.password = "Please enter password";
-    } else if (formData.password.length < 7) {
-      newErrors.password = "Please enter atleast 7 letters";
-    } else if (formData.password.length >= 7) {
-      newErrors.password = " ";
+    }
+    if (formData.email == "" || formData.email == null) {
+      newErrors.email = "Please enter email";
+    } else if (formData.email != "" && formData.password != "") {
+      newErrors.email = "Please enter password";
+      if (filter.test(formData.email)) {
+        console.log("Saran");
+        newErrors.email = " ";
+        let login = JSON.parse(localStorage.getItem("users"));
+        console.log(login, "Logins");
+        let itemData = login.find((item) => {
+          console.log("fghJKLjh");
+          if (formData.email === item.Email && formData.password === item.Password) {
+            let login_user = JSON.parse(localStorage.getItem("Users_login"));
+            if (!Array.isArray(login_user)) {
+              login_user = [];
+              console.log(login_user, "gjjh");
+            }
+            if (login_user == "") {
+              console.log("jchjch");
+              login_user.push({ login_email: formData.email, login_password: formData.password });
+              alert("Registered Successfully");
+              navigate("/authentication/dashboard");
+            }
+            let str = JSON.stringify(login_user);
+            localStorage.setItem("Users_login", str);
+            console.log(login_user, "String");
+            return true;
+          }
+        });
+        if (!itemData) {
+          alert("Invalid Useranme or Password");
+          window.location.reload();
+        }
+        if (itemData) {
+          console.log("gggggg", itemData.Email, itemData.Password);
+          if (itemData.Email === formData.email && itemData.Password == formData.password) {
+            navigate("/dashboard");
+          } else if (itemData.Email == formData.email && itemData.Password != formData.password) {
+            alert("Please Check your Username or Password");
+          } else {
+            alert("Invalid Useranme or Password");
+          }
+        }
+      } else if (!filter.test(formData.email)) {
+        newErrors.email = "Please enter valid email";
+      }
+    } else if (filter.test(formData.email)) {
+      newErrors.email = " ";
     }
     setErrors(newErrors);
   };
