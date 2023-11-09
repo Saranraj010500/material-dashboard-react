@@ -78,39 +78,44 @@ function Basic() {
         newErrors.email = " ";
         let login = JSON.parse(localStorage.getItem("users"));
         console.log(login, "Logins");
-        let itemData = login.find((item) => {
-          console.log("fghJKLjh");
-          if (formData.email === item.Email && formData.password === item.Password) {
-            let login_user = JSON.parse(localStorage.getItem("Users_login"));
-            if (!Array.isArray(login_user)) {
-              login_user = [];
-              console.log(login_user, "gjjh");
+        if (login !== null) {
+          let itemData = login.find((item) => {
+            console.log("fghJKLjh");
+            if (formData.email === item.Email && formData.password === item.Password) {
+              let login_user = JSON.parse(localStorage.getItem("Users_login"));
+              if (!Array.isArray(login_user)) {
+                login_user = [];
+                console.log(login_user, "gjjh");
+              }
+              if (login_user == "") {
+                console.log("jchjch");
+                login_user.push({ login_email: formData.email, login_password: formData.password });
+                alert("Registered Successfully");
+                navigate("/authentication/dashboard");
+              }
+              let str = JSON.stringify(login_user);
+              localStorage.setItem("Users_login", str);
+              console.log(login_user, "String");
+              return true;
             }
-            if (login_user == "") {
-              console.log("jchjch");
-              login_user.push({ login_email: formData.email, login_password: formData.password });
-              alert("Registered Successfully");
-              navigate("/authentication/dashboard");
-            }
-            let str = JSON.stringify(login_user);
-            localStorage.setItem("Users_login", str);
-            console.log(login_user, "String");
-            return true;
-          }
-        });
-        if (!itemData) {
-          alert("Invalid Useranme or Password");
-          window.location.reload();
-        }
-        if (itemData) {
-          console.log("gggggg", itemData.Email, itemData.Password);
-          if (itemData.Email === formData.email && itemData.Password == formData.password) {
-            navigate("/dashboard");
-          } else if (itemData.Email == formData.email && itemData.Password != formData.password) {
-            alert("Please Check your Username or Password");
-          } else {
+          });
+
+          if (!itemData) {
             alert("Invalid Useranme or Password");
+            window.location.reload();
           }
+          if (itemData) {
+            console.log("gggggg", itemData.Email, itemData.Password);
+            if (itemData.Email === formData.email && itemData.Password == formData.password) {
+              navigate("/dashboard");
+            } else if (itemData.Email == formData.email && itemData.Password != formData.password) {
+              alert("Please Check your Username or Password");
+            } else {
+              alert("Invalid Useranme or Password");
+            }
+          }
+        } else {
+          alert("Invalid Useranme or Password");
         }
       } else if (!filter.test(formData.email)) {
         newErrors.email = "Please enter valid email";
