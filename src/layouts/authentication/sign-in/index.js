@@ -13,7 +13,9 @@ Coded by www.creative-tim.com
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
 
+import data from "userdata.json";
 import { useState } from "react";
+import { useEffect } from "react";
 
 // react-router-dom components
 import { Link } from "react-router-dom";
@@ -35,6 +37,7 @@ import MDTypography from "components/MDTypography";
 import MDInput from "components/MDInput";
 import MDButton from "components/MDButton";
 import { useNavigate } from "react-router-dom";
+// import { useHistory } from "react-router-dom";
 
 // Authentication layout components
 import BasicLayout from "layouts/authentication/components/BasicLayout";
@@ -42,88 +45,154 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 // Images
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 
-function Basic() {
+const Login = () => {
   const [rememberMe, setRememberMe] = useState(false);
 
   const handleSetRememberMe = () => setRememberMe(!rememberMe);
-  const [formData, setformData] = useState({
-    email: "",
-    password: "",
-  });
-  let navigate = useNavigate();
+  const Navigate = useNavigate();
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({
     email: "",
     password: "",
   });
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setformData({
-      ...formData,
-      [name]: value,
-    });
-  };
-  const submit = () => {
-    const newErrors = {};
-    let filter =
-      /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
-    if (formData.password == "" || formData.password == null) {
-      newErrors.password = "Please enter password";
-    }
-    if (formData.email == "" || formData.email == null) {
-      newErrors.email = "Please enter email";
-    } else if (formData.email != "" && formData.password != "") {
-      newErrors.email = "Please enter password";
-      if (filter.test(formData.email)) {
-        console.log("Saran");
-        newErrors.email = " ";
-        let login = JSON.parse(localStorage.getItem("users"));
-        console.log(login, "Logins");
-        if (login !== null) {
-          let itemData = login.find((item) => {
-            console.log("fghJKLjh");
-            if (formData.email === item.Email && formData.password === item.Password) {
-              let login_user = JSON.parse(localStorage.getItem("Users_login"));
-              if (!Array.isArray(login_user)) {
-                login_user = [];
-                console.log(login_user, "gjjh");
-              }
-              if (login_user == "") {
-                console.log("jchjch");
-                login_user.push({ login_email: formData.email, login_password: formData.password });
-                alert("Registered Successfully");
-                navigate("/authentication/dashboard");
-              }
-              let str = JSON.stringify(login_user);
-              localStorage.setItem("Users_login", str);
-              console.log(login_user, "String");
-              return true;
-            }
-          });
 
-          if (!itemData) {
-            alert("Invalid Useranme or Password");
-            window.location.reload();
-          }
-          if (itemData) {
-            console.log("gggggg", itemData.Email, itemData.Password);
-            if (itemData.Email === formData.email && itemData.Password == formData.password) {
-              navigate("/dashboard");
-            } else if (itemData.Email == formData.email && itemData.Password != formData.password) {
-              alert("Please Check your Username or Password");
-            } else {
-              alert("Invalid Useranme or Password");
-            }
-          }
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
+  };
+
+  const [isServerRunning, setIsServerRunning] = useState(false);
+  useEffect(() => {
+    // Check if the JSON server is running
+    const checkServerStatus = async () => {
+      try {
+        const response = await fetch("http://localhost:5000"); // Change the URL to your JSON server endpoint
+        if (response.ok) {
+          setIsServerRunning(true);
         } else {
-          alert("Invalid Useranme or Password");
+          setIsServerRunning(false);
         }
-      } else if (!filter.test(formData.email)) {
-        newErrors.email = "Please enter valid email";
+      } catch (error) {
+        setIsServerRunning(false);
       }
-    } else if (filter.test(formData.email)) {
-      newErrors.email = " ";
+    };
+
+    // Call the function to check the server status
+    checkServerStatus();
+  }, []);
+  const handleSubmit = async () => {
+    let register = JSON.parse(localStorage.getItem("users"));
+    let reg = false;
+    if (isServerRunning) {
+      if (!Array.isArray(data.users) || register === "") {
+        reg = true;
+      } else if (register !== "") {
+        let inVaild = data.users.filter((item) => {
+          console.log(item);
+          if (formData.email === item.Email) {
+            return true;
+          }
+        });
+        console.log(inVaild, "invlalid");
+        if (inVaild.length > 0) {
+          alert("Email Already Exist");
+          return;
+        } else {
+          reg = true;
+        }
+        // data.users.push({Email: formData.email, Password: formData.password });
+      }
+      try {
+        // If the server is running, send data to JSON server
+        const response = await fetch("http://localhost:5000/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            Email: formData.email,
+            Password: formData.password,
+          }),
+        });
+        if (response.ok) {
+          console.log("Data sent to JSON server:", formData);
+        } else {
+          console.error("Failed to send data to JSON server.");
+        }
+      } catch (error) {
+        console.error("Error occurred while sending data to JSON server:", error);
+      }
+    } else {
+      if (!Array.isArray(data.users) || register === "") {
+        reg = true;
+      } else if (register !== "") {
+        let inVaild = data.users.filter((item) => {
+          console.log(item);
+          if (formData.email === item.Email) {
+            console.log("DFGHJKL");
+            return true;
+          }
+        });
+        console.log(inVaild);
+        if (inVaild.length > 0) {
+          alert("Email Already Exist");
+          return;
+        } else {
+          reg = true;
+        }
+
+        // data.users.push({Email: formData.email, Password: formData.password });
+      }
     }
-    setErrors(newErrors);
+    // const validateForm = () => {
+    //   let isValid = true;
+    //   const newErrors = {};
+
+    //   // Email validation
+    //   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    //   if (!formData.email.trim() || !emailPattern.test(formData.email.trim())) {
+    //     newErrors.email = "Enter a valid email address";
+    //     isValid = false;
+    //   }
+
+    //   if (!formData.password.trim()) {
+    //     newErrors.password = "Password is required";
+    //     isValid = false;
+    //   }
+
+    //   setErrors(newErrors);
+    //   return isValid;
+    // };
+
+    // const handleSubmit = () => {
+    //   if (validateForm()) {
+    //     // Simulate user authentication by checking the credentials
+    //     // (Replace this with actual authentication logic)
+
+    //     // console.log(login);
+    //     console.log(data, "DATA");
+    //     if (!Array.isArray(data.users) || register === "") {
+    //       reg = true;
+    //     } else if (register !== "") {
+    //       let inVaild = data.users.filter((item) => {
+    //         console.log(item);
+    //         if (formData.email === item.Email) {
+    //           console.log("DFGHJKL");
+    //           return true;
+    //         }
+    //       });
+    //       console.log(inVaild);
+    //       if (inVaild.length > 0) {
+    //         alert("Email Already Exist");
+    //         return;
+    //       } else {
+    //         reg = true;
+    //       }
+
+    //       // data.users.push({Email: formData.email, Password: formData.password });
+    //     }
+    //   }
+    // };
   };
 
   return (
@@ -169,12 +238,14 @@ function Basic() {
                 label="Email"
                 name="email"
                 value={formData.email}
-                onChange={handleInputChange}
+                onChange={handleChange}
                 fullWidth
+                error={Boolean(errors.email)}
+                helperText={errors.email}
               />
-              <MDBox color="red" fontSize="12px">
+              {/* <MDBox color="red" fontSize="12px">
                 {errors.email}
-              </MDBox>
+              </MDBox> */}
             </MDBox>
             <MDBox mb={2}>
               <MDInput
@@ -182,12 +253,14 @@ function Basic() {
                 label="Password"
                 name="password"
                 value={formData.password}
-                onChange={handleInputChange}
+                onChange={handleChange}
                 fullWidth
+                error={Boolean(errors.password)}
+                helperText={errors.password}
               />
-              <MDBox color="red" fontSize="12px">
+              {/* <MDBox color="red" fontSize="12px">
                 {errors.password}
-              </MDBox>
+              </MDBox> */}
             </MDBox>
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />
@@ -202,7 +275,7 @@ function Basic() {
               </MDTypography>
             </MDBox>
             <MDBox mt={4} mb={1}>
-              <MDButton variant="gradient" color="info" fullWidth onClick={submit}>
+              <MDButton variant="gradient" color="info" fullWidth onClick={handleSubmit}>
                 sign in
               </MDButton>
             </MDBox>
@@ -226,6 +299,6 @@ function Basic() {
       </Card>
     </BasicLayout>
   );
-}
+};
 
-export default Basic;
+export default Login;

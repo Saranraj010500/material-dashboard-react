@@ -30,6 +30,9 @@ import MDBox from "components/MDBox";
 import Sidenav from "examples/Sidenav";
 import Configurator from "examples/Configurator";
 
+import Registration from "./layouts/authentication/sign-up";
+import Login from "./layouts/authentication/sign-up";
+
 // Material Dashboard 2 React themes
 import theme from "assets/theme";
 import themeRTL from "assets/theme/theme-rtl";
@@ -191,6 +194,8 @@ export default function App() {
       {layout === "vr" && <Configurator />}
       <Routes>
         {getRoutes(routes)}
+        <Route path="/authentication/sign-UP" component={Registration} />
+        <Route path="/authentication/sign-in" component={Login} />
         <Route path="*" element={<Navigate to="/authentication/sign-in" />} />
         {/* <Redirect from="/*" to="/dashboard" /> */}
       </Routes>
