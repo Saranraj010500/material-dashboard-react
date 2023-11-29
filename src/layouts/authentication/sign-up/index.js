@@ -52,11 +52,8 @@ const Registration = () => {
     password: "",
   });
 
-  const [registrationData, setRegistrationData] = useState([]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setformData({ ...formData, [name]: value });
   };
 
@@ -91,7 +88,6 @@ const Registration = () => {
         setIsServerRunning(false);
       }
     };
-
     // Call the function to check the server status
     checkServerStatus();
   }, []);
@@ -127,16 +123,14 @@ const Registration = () => {
         } else if (formData.password.length >= 7) {
           newErrors.password = " ";
         }
-
       default:
         console.log("hvhhb");
         break;
     }
-
     setErrors(newErrors);
   };
-
-  const handleSubmit = async () => {
+  // ************************************************* Name Validation ***************************************************
+  const _nameValidation = () => {
     if (formData.name === "" || formData.name === null) {
       newErrors.name = "Please enter the name";
     } else if (formData.name.length < 3) {
@@ -146,7 +140,9 @@ const Registration = () => {
       if (register === "") {
       }
     }
-
+  };
+  // ************************************************* Password Validation ***************************************************
+  const _passwordValidation = () => {
     if (formData.password === "" || formData.password === null) {
       newErrors.password = "Please enter password";
     } else if (formData.password.length < 7) {
@@ -154,7 +150,34 @@ const Registration = () => {
     } else if (formData.password.length >= 7) {
       newErrors.password = " ";
     }
+  };
+  const _toCheckServerisRunningOrNot = async () => {
+    try {
+      console.log("try");
+      // If the server is running, send data to JSON server
+      const response = await fetch("http://localhost:3000/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Email: formData.email,
+          Password: formData.password,
+        }),
+      });
+      if (response.ok) {
+        console.log("try - send");
+        console.log("Data sent to JSON server:", formData);
+      } else {
+        console.error("Failed to send data to JSON server.");
+      }
+    } catch (error) {
+      console.error("Error occurred while sending data to JSON server:", error);
+    }
+  };
 
+  // ************************************************* Email Validation ***************************************************
+  const _emailValidation = async () => {
     if (formData.email === "" || formData.email === null) {
       newErrors.email = "Please enter email";
     } else if (formData.email !== "") {
@@ -162,12 +185,13 @@ const Registration = () => {
       let storage = localStorage.getItem("users");
       console.log(storage, "Storage");
       if (storage !== null) register = JSON.parse(localStorage.getItem("users"));
+      //********************************************* Server is Running ****************************************************
       if (isServerRunning) {
         let reg = false;
         console.log("Running");
         let userData = await _getUserData();
         console.log(userData, "USerData");
-        let inVaild = registrationData.filter((item) => {
+        let inVaild = userData.filter((item) => {
           console.log(item, "item");
           if (formData.email === item.Email) {
             console.log("Item -Email");
@@ -181,69 +205,51 @@ const Registration = () => {
         } else {
           reg = true;
         }
-        try {
-          console.log("try");
-          // If the server is running, send data to JSON server
-          const response = await fetch("http://localhost:3000/users", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              Email: formData.email,
-              Password: formData.password,
-            }),
-          });
-          if (response.ok) {
-            console.log("try - send");
-            console.log("Data sent to JSON server:", formData);
-          } else {
-            console.error("Failed to send data to JSON server.");
-          }
-        } catch (error) {
-          console.error("Error occurred while sending data to JSON server:", error);
-        }
-      } //isnotServerRunning
+        _toCheckServerisRunningOrNot();
+      }
+      //************************************************** Server is not Running ***************************************
       else if (!isServerRunning) {
         console.log("JSON Server is not Running");
         if (!Array.isArray(register) || register === "") {
           register = [];
           console.log(register, "register");
-          // register = true;
         }
         if (register == "") {
           console.log("jchjch");
           register.push({ email: formData.email, password: formData.password });
-          console.log("Login Success - Step 1");
-          // return true;
-          // window.location.href = "login3.html";
+          console.log(formData, "Login Success - Step 1");
+          Navigate("/authentication/sign-in");
         } else if (register !== "") {
           let inVaild = register.find((item) => {
             console.log(item, "item");
-            if (formData.email === item.Email) {
-              // return true;
+            if (formData.email === item.email) {
+              return true;
+              // console.log("Saran");
             }
           });
-          if (inVaild > 0) {
+          if (inVaild) {
             console.log(inVaild, "invalid");
             alert("Email Already Exist");
             window.location.reload();
+          } else {
+            // If JSON server is not running, store data in local storage
+            register.push({ email: formData.email, password: formData.password });
+            // Redirect to login after successful registration
+            Navigate("/authentication/sign-in");
           }
-          // else {
-          //   register.push({ email: formData.email, password: formData.password });
-          //   // register = true;
-          // }
         }
-        // If JSON server is not running, store data in local storage
-        console.log("Storing data in local storage:", formData);
-        let str = JSON.stringify(register);
-        localStorage.setItem("users", str);
-        console.log(register, "DFGHJKL");
-        // Redirect to login after successful registration
-        // Navigate("/authentication/sign-in");
       }
+      console.log("Storing data in local storage:", formData);
+      let str = JSON.stringify(register);
+      localStorage.setItem("users", str);
+      console.log(register, "registered data");
     }
-
+  };
+  // ************************************************* OnClick Submit ***************************************************
+  const handleSubmit = () => {
+    _nameValidation();
+    _passwordValidation();
+    _emailValidation();
     setErrors(newErrors);
   };
   return (
