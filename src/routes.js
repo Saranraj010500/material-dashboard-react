@@ -64,6 +64,7 @@ const routes = [
     icon: <Icon fontSize="small">table_view</Icon>,
     route: "/tables",
     component: <Tables />,
+    
   },
   {
     type: "collapse",

@@ -39,6 +39,7 @@ import { useEffect } from "react";
 
 const Registration = () => {
   const newErrors = {};
+  let item;
   let register = JSON.parse(localStorage.getItem("users"));
   const Navigate = useNavigate();
   const [formData, setformData] = useState({
@@ -70,9 +71,8 @@ const Registration = () => {
       return { error: "User Data not found!" };
     }
   };
-
+  // ************************************************* Check if the JSON server is running ***************************************************
   useEffect(() => {
-    // Check if the JSON server is running
     const checkServerStatus = async () => {
       try {
         const response = await fetch("http://localhost:5000"); // Change the URL to your JSON server endpoint
@@ -92,43 +92,31 @@ const Registration = () => {
     checkServerStatus();
   }, []);
 
-  const _validateField = (key) => {
-    switch (key) {
-      case "name":
-        if (formData.name === "" || formData.name === null) {
-          newErrors.name = "Please enter the name";
-        } else if (formData.name.length < 3) {
-          newErrors.name = "Please enter atleast 3 letters";
-        } else if (formData.name.length >= 3) {
-          newErrors.name = " ";
-          if (register === "") {
-          }
-        }
-        break;
-      case "email":
-        if (formData.email === "" || formData.email === null) {
-          newErrors.email = "Please enter email";
-        } else if (formData.email !== "") {
-          if (!/\S+@\S+\.\S+/.test(formData.email)) {
-            newErrors.email = "Please enter a valid email";
-          }
-        }
-        break;
-
-      case "password":
-        if (formData.password === "" || formData.password === null) {
-          newErrors.password = "Please enter password";
-        } else if (formData.password.length < 7) {
-          newErrors.password = "Please enter atleast 7 letters";
-        } else if (formData.password.length >= 7) {
-          newErrors.password = " ";
-        }
-      default:
-        console.log("hvhhb");
-        break;
+  const _toCheckServerisRunningOrNot = async () => {
+    try {
+      console.log("try");
+      // If the server is running, send data to JSON server
+      const response = await fetch("http://localhost:5000/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Email: formData.email,
+          password: formData.password,
+        }),
+      });
+      if (response.ok) {
+        console.log("try - send");
+        console.log("Data sent to JSON server:", formData);
+      } else {
+        console.error("Failed to send data to JSON server.");
+      }
+    } catch (error) {
+      console.error("Error occurred while sending data to JSON server:", error);
     }
-    setErrors(newErrors);
   };
+
   // ************************************************* Name Validation ***************************************************
   const _nameValidation = () => {
     if (formData.name === "" || formData.name === null) {
@@ -149,30 +137,6 @@ const Registration = () => {
       newErrors.password = "Please enter atleast 7 letters";
     } else if (formData.password.length >= 7) {
       newErrors.password = " ";
-    }
-  };
-  const _toCheckServerisRunningOrNot = async () => {
-    try {
-      console.log("try");
-      // If the server is running, send data to JSON server
-      const response = await fetch("http://localhost:3000/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          Email: formData.email,
-          Password: formData.password,
-        }),
-      });
-      if (response.ok) {
-        console.log("try - send");
-        console.log("Data sent to JSON server:", formData);
-      } else {
-        console.error("Failed to send data to JSON server.");
-      }
-    } catch (error) {
-      console.error("Error occurred while sending data to JSON server:", error);
     }
   };
 
@@ -199,11 +163,16 @@ const Registration = () => {
           }
         });
         console.log(inVaild, "invlalid");
-        if (inVaild.length > 0) {
+        if (inVaild > 0) {
           alert("Email Already Exist");
           return;
         } else {
           reg = true;
+        }
+        if (formData.email === item.Email) {
+          console.log("after send to the json server - store in the local storage");
+          register.push({ Email: formData.email, password: formData.password });
+          return true;
         }
         _toCheckServerisRunningOrNot();
       }
@@ -216,13 +185,13 @@ const Registration = () => {
         }
         if (register == "") {
           console.log("jchjch");
-          register.push({ email: formData.email, password: formData.password });
+          register.push({ Email: formData.email, password: formData.password });
           console.log(formData, "Login Success - Step 1");
           Navigate("/authentication/sign-in");
         } else if (register !== "") {
           let inVaild = register.find((item) => {
             console.log(item, "item");
-            if (formData.email === item.email) {
+            if (formData.email === item.Email) {
               return true;
               // console.log("Saran");
             }
@@ -233,7 +202,7 @@ const Registration = () => {
             window.location.reload();
           } else {
             // If JSON server is not running, store data in local storage
-            register.push({ email: formData.email, password: formData.password });
+            register.push({ Email: formData.email, password: formData.password });
             // Redirect to login after successful registration
             Navigate("/authentication/sign-in");
           }
@@ -283,7 +252,7 @@ const Registration = () => {
                 variant="standard"
                 value={formData.name}
                 onChange={handleChange}
-                onBlur={() => _validateField("name")}
+                // onBlur={() => _validateField("name")}
                 fullWidth
                 error={Boolean(errors.name)}
                 helperText={errors.name}
@@ -297,7 +266,7 @@ const Registration = () => {
                 variant="standard"
                 value={formData.email}
                 onChange={handleChange}
-                onBlur={() => _validateField("email")}
+                // onBlur={() => _validateField("email")}
                 fullWidth
                 error={Boolean(errors.email)}
                 helperText={errors.email}
@@ -311,7 +280,7 @@ const Registration = () => {
                 variant="standard"
                 value={formData.password}
                 onChange={handleChange}
-                onBlur={() => _validateField("password")}
+                // onBlur={() => _validateField("password")}
                 fullWidth
                 error={Boolean(errors.password)}
                 helperText={errors.password}

@@ -12,8 +12,6 @@ Coded by www.creative-tim.com
 
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 */
-
-import data from "userdata.json";
 import { useState } from "react";
 import { useEffect } from "react";
 
@@ -46,22 +44,40 @@ import BasicLayout from "layouts/authentication/components/BasicLayout";
 import bgImage from "assets/images/bg-sign-in-basic.jpeg";
 
 const Login = () => {
-  const [rememberMe, setRememberMe] = useState(false);
-
-  const handleSetRememberMe = () => setRememberMe(!rememberMe);
+  const newErrors = {};
+  let register = JSON.parse(localStorage.getItem("users"));
   const Navigate = useNavigate();
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setformData] = useState({
+    email: "",
+    password: "",
+  });
   const [errors, setErrors] = useState({
     email: "",
     password: "",
   });
-
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: "" });
+    const { name, value } = e.target;
+    setformData({ ...formData, [name]: value });
   };
 
   const [isServerRunning, setIsServerRunning] = useState(false);
+
+  const _getUserData = async () => {
+    let response;
+    try {
+      response = await fetch("http://localhost:5000/users");
+      if (response.ok) {
+        return response.json();
+      }
+    } catch (error) {
+      return { error: "User Data not found!" };
+    }
+  };
+
+  const [rememberMe, setRememberMe] = useState(false);
+
+  const handleSetRememberMe = () => setRememberMe(!rememberMe);
+
   useEffect(() => {
     // Check if the JSON server is running
     const checkServerStatus = async () => {
@@ -76,123 +92,124 @@ const Login = () => {
         setIsServerRunning(false);
       }
     };
-
     // Call the function to check the server status
     checkServerStatus();
   }, []);
-  const handleSubmit = async () => {
-    let register = JSON.parse(localStorage.getItem("users"));
-    let reg = false;
-    if (isServerRunning) {
-      if (!Array.isArray(data.users) || register === "") {
-        reg = true;
-      } else if (register !== "") {
-        let inVaild = data.users.filter((item) => {
-          console.log(item);
-          if (formData.email === item.Email) {
-            return true;
-          }
-        });
-        console.log(inVaild, "invlalid");
-        if (inVaild.length > 0) {
-          alert("Email Already Exist");
-          return;
-        } else {
-          reg = true;
-        }
-        // data.users.push({Email: formData.email, Password: formData.password });
-      }
-      try {
-        // If the server is running, send data to JSON server
-        const response = await fetch("http://localhost:5000/users", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            Email: formData.email,
-            Password: formData.password,
-          }),
-        });
-        if (response.ok) {
-          console.log("Data sent to JSON server:", formData);
-        } else {
-          console.error("Failed to send data to JSON server.");
-        }
-      } catch (error) {
-        console.error("Error occurred while sending data to JSON server:", error);
-      }
-    } else {
-      if (!Array.isArray(data.users) || register === "") {
-        reg = true;
-      } else if (register !== "") {
-        let inVaild = data.users.filter((item) => {
-          console.log(item);
-          if (formData.email === item.Email) {
-            console.log("DFGHJKL");
-            return true;
-          }
-        });
-        console.log(inVaild);
-        if (inVaild.length > 0) {
-          alert("Email Already Exist");
-          return;
-        } else {
-          reg = true;
-        }
 
-        // data.users.push({Email: formData.email, Password: formData.password });
+  const _toCheckServerisRunningOrNot = async () => {
+    try {
+      console.log("try");
+      // If the server is running, send data to JSON server
+      const response = await fetch("http://localhost:5000/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          Email: formData.email,
+          password: formData.password,
+        }),
+      });
+      if (response.ok) {
+        console.log("try - send");
+        console.log("Data sent to JSON server:", formData);
+      } else {
+        console.error("Failed to send data to JSON server.");
+      }
+    } catch (error) {
+      console.error("Error occurred while sending data to JSON server:", error);
+    }
+  };
+
+  // ************************************************* Password Validation ***************************************************
+  const _passwordValidation = () => {
+    if (formData.password === "" || formData.password === null) {
+      newErrors.password = "Please enter password";
+    } else if (formData.password.length < 7) {
+      newErrors.password = "Please enter atleast 7 letters";
+    } else if (formData.password.length >= 7) {
+      newErrors.password = " ";
+    }
+  };
+  // ************************************************* Email Validation ***************************************************
+  const _emailValidation = async () => {
+    if (formData.email === "" || formData.email === null) {
+      newErrors.email = "Please enter email";
+    } else if (formData.email !== "") {
+      if (!/\S+@\S+\.\S+/.test(formData.email)) {
+        newErrors.email = "Please enter a valid email";
+      } else {
+        newErrors.email = " ";
+        let storage = localStorage.getItem("users");
+        console.log(storage, "Storage");
+        if (storage !== null) register = JSON.parse(localStorage.getItem("users"));
+        //********************************************* Server is Running ****************************************************
+        if (isServerRunning) {
+          let reg = false;
+          console.log("Running");
+          let userData = await _getUserData();
+          console.log(userData, "UserData");
+          let inVaild = userData.filter((item) => {
+            console.log(item, "item");
+            if (formData.email === item.Email) {
+              console.log("Item -Email");
+              return true;
+            }
+          });
+          console.log(inVaild, "invlalid");
+          if (inVaild.length > 0) {
+            alert("Email Already Exist");
+            return;
+          } else {
+            reg = true;
+          }
+          _toCheckServerisRunningOrNot();
+          register.push({ email: formData.email, password: formData.password });
+        }
+        //************************************************** Server is not Running ***************************************
+        else if (!isServerRunning) {
+          console.log("JSON Server is not Running");
+          if (!Array.isArray(register) || register === "") {
+            register = [];
+            console.log(register, "register");
+          }
+          if (register == "") {
+            console.log("jchjch");
+            register.push({ email: formData.email, password: formData.password });
+            console.log(formData, "Login Success - Step 1");
+            Navigate("/authentication/sign-in");
+          } else if (register !== "") {
+            let inVaild = register.find((item) => {
+              console.log(item, "item");
+              if (formData.email === item.email) {
+                return true;
+                // console.log("Saran");
+              }
+            });
+            if (inVaild) {
+              console.log(inVaild, "invalid");
+              alert("Email Already Exist");
+              window.location.reload();
+            } else {
+              // If JSON server is not running, store data in local storage
+              register.push({ email: formData.email, password: formData.password });
+              // Redirect to login after successful registration
+              Navigate("/authentication/sign-in");
+            }
+          }
+        }
+        console.log("Storing data in local storage:", formData);
+        let str = JSON.stringify(register);
+        localStorage.setItem("users", str);
+        console.log(register, "registered data");
       }
     }
-    // const validateForm = () => {
-    //   let isValid = true;
-    //   const newErrors = {};
+  };
 
-    //   // Email validation
-    //   const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    //   if (!formData.email.trim() || !emailPattern.test(formData.email.trim())) {
-    //     newErrors.email = "Enter a valid email address";
-    //     isValid = false;
-    //   }
-
-    //   if (!formData.password.trim()) {
-    //     newErrors.password = "Password is required";
-    //     isValid = false;
-    //   }
-
-    //   setErrors(newErrors);
-    //   return isValid;
-    // };
-
-    // const handleSubmit = () => {
-    //   if (validateForm()) {
-    //     // Simulate user authentication by checking the credentials
-    //     // (Replace this with actual authentication logic)
-
-    //     // console.log(login);
-    //     console.log(data, "DATA");
-    //     if (!Array.isArray(data.users) || register === "") {
-    //       reg = true;
-    //     } else if (register !== "") {
-    //       let inVaild = data.users.filter((item) => {
-    //         console.log(item);
-    //         if (formData.email === item.Email) {
-    //           console.log("DFGHJKL");
-    //           return true;
-    //         }
-    //       });
-    //       console.log(inVaild);
-    //       if (inVaild.length > 0) {
-    //         alert("Email Already Exist");
-    //         return;
-    //       } else {
-    //         reg = true;
-    //       }
-
-    //       // data.users.push({Email: formData.email, Password: formData.password });
-    //     }
-    //   }
-    // };
+  const handleSubmit = async () => {
+    _passwordValidation();
+    _emailValidation();
+    setErrors(newErrors);
   };
 
   return (
@@ -237,30 +254,26 @@ const Login = () => {
                 type="email"
                 label="Email"
                 name="email"
+                variant="standard"
                 value={formData.email}
                 onChange={handleChange}
                 fullWidth
                 error={Boolean(errors.email)}
                 helperText={errors.email}
               />
-              {/* <MDBox color="red" fontSize="12px">
-                {errors.email}
-              </MDBox> */}
             </MDBox>
             <MDBox mb={2}>
               <MDInput
                 type="password"
                 label="Password"
                 name="password"
+                variant="standard"
                 value={formData.password}
                 onChange={handleChange}
                 fullWidth
                 error={Boolean(errors.password)}
                 helperText={errors.password}
               />
-              {/* <MDBox color="red" fontSize="12px">
-                {errors.password}
-              </MDBox> */}
             </MDBox>
             <MDBox display="flex" alignItems="center" ml={-1}>
               <Switch checked={rememberMe} onChange={handleSetRememberMe} />
